@@ -174,10 +174,8 @@ oneway-cli --help
 
 El paquete usa `src/oneway_cli/` para el código, `Typer` para comandos, `Rich` para salida, `BeautifulSoup` para analizar listados HTML y `curl_cffi` para las solicitudes autenticadas.
 
-## Descargo
-
-Este proyecto no está afiliado, respaldado ni patrocinado por One Way Cargo. Es una herramienta independiente desarrollada por terceros.
-
 ## Licencia
 
 MIT. Consulta [LICENSE](LICENSE).
+
+*Este proyecto no está afiliado, respaldado ni patrocinado por One Way Cargo. Es una herramienta independiente desarrollada por terceros.*
