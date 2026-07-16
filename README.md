@@ -23,6 +23,7 @@ El proyecto está en desarrollo local. Antes de distribuirlo públicamente, es n
 - Inicio y cierre de sesión.
 - Caché de sesión de dos horas con renovación automática.
 - Consulta de tracking e historial mediante el endpoint estructurado del sitio.
+- Listado de órdenes/tracking pendientes desde el panel de cuentas.
 - Consulta de alertas existentes por tracking.
 - Creación confirmada de alertas individuales sin duplicados.
 - Salida JSON para integrar con otros scripts.
@@ -90,6 +91,17 @@ oneway-cli logout --forget-credentials      # también borra correo y clave del 
 ```
 
 ## Comandos
+
+### Listar Órdenes
+
+```bash
+oneway-cli orders
+oneway-cli orders --json
+oneway-cli orders --all
+oneway-cli orders --status "Por Pagar"
+```
+
+Muestra las órdenes activas del panel de cuentas. Por defecto omite los detalles de costos (handling fee, storage fee, etc.) y excluye las filas marcadas como pagadas. Usa `--all` para ver todas las filas y `--status` para filtrar por un estado específico.
 
 ### Consultar Un Tracking
 

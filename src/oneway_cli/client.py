@@ -27,6 +27,7 @@ ALERT_URL = f"{BASE_URL}/onewayidv2/alert"
 ALERTS_URL = f"{BASE_URL}/onewayidv2/alerts"
 TRACKING_URL = f"{BASE_URL}/onewayidv2/tracking"
 TRACKING_LOOKUP_URL = f"{BASE_URL}/buscar_tracking"
+ORDERS_URL = f"{BASE_URL}/onewayidv2/orders"
 CONFIG_DIR = user_config_path("oneway-cli", ensure_exists=True)
 CONFIG_PATH = CONFIG_DIR / "config.json"
 SESSION_PATH = CONFIG_DIR / "session.json"
@@ -70,6 +71,20 @@ class TrackingResult:
     arrived_miami: str
     arrived_venezuela: str
     history: list[dict[str, str]]
+
+
+@dataclass(frozen=True)
+class Order:
+    warehouse: str
+    status: str
+    tracking: str
+    dimensions: str
+    weight: str
+    arrived_usa: str
+    arrived_venezuela: str
+    notes: str
+    total: str
+    is_detail: bool
 
 
 def ensure_config_dir() -> None:
@@ -310,6 +325,51 @@ def alert_form(session: requests.Session) -> dict[str, str]:
     fields["_token"] = token
     save_session(session)
     return fields
+
+
+def orders(session: requests.Session) -> list[Order]:
+    response = protected_get(session, ORDERS_URL)
+    soup = BeautifulSoup(response.text, "html.parser")
+    tables = soup.find_all("table")
+    if not tables:
+        raise OneWayError("La página de órdenes no contiene una tabla.")
+    table = tables[0]
+    rows = table.find_all("tr")
+    result: list[Order] = []
+    for row in rows:
+        cells = row.find_all(["td", "th"])
+        if len(cells) < 9:
+            continue
+        values = [text(cell) for cell in cells]
+        header = values[0].lower()
+        if header == "warehouse" or header.startswith("total"):
+            continue
+        warehouse = values[0].split()[0] if values[0] else ""
+        status = " ".join(values[1].split())
+        tracking = values[2].upper()
+        dimensions = values[3]
+        weight = values[4]
+        arrived_usa = values[5]
+        arrived_venezuela = values[6]
+        notes = values[7]
+        total = values[8]
+        is_detail = not tracking and not dimensions and not weight
+        result.append(
+            Order(
+                warehouse=warehouse,
+                status=status,
+                tracking=tracking,
+                dimensions=dimensions,
+                weight=weight,
+                arrived_usa=arrived_usa,
+                arrived_venezuela=arrived_venezuela,
+                notes=notes,
+                total=total,
+                is_detail=is_detail,
+            )
+        )
+    save_session(session)
+    return result
 
 
 def alerts_for_tracking(session: requests.Session, tracking: str) -> list[Alert]:

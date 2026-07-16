@@ -209,5 +209,56 @@ def track(
         console.print(history)
 
 
+@app.command()
+def orders(
+    as_json: Annotated[bool, typer.Option("--json", help="Emitir JSON")] = False,
+    status_filter: Annotated[
+        str | None, typer.Option("--status", help="Filtrar por estado exacto o parcial")
+    ] = None,
+    all_rows: Annotated[
+        bool, typer.Option("--all", help="Mostrar todas las filas incluyendo detalles de costos")
+    ] = False,
+) -> None:
+    try:
+        session, _ = session_or_fail()
+        try:
+            result = client.orders(session)
+        finally:
+            session.close()
+    except (client.OneWayError, RequestsError) as error:
+        fail(str(error))
+        return
+    if not all_rows:
+        result = [order for order in result if not order.is_detail]
+    if status_filter:
+        needle = status_filter.lower()
+        result = [order for order in result if needle in order.status.lower()]
+    else:
+        result = [order for order in result if order.status.lower() != "pagado"]
+    if as_json:
+        console.print_json(json.dumps([order.__dict__ for order in result], ensure_ascii=False))
+        return
+    if not result:
+        console.print("No se encontraron órdenes pendientes.")
+        return
+    table = Table(title="Órdenes pendientes")
+    table.add_column("Warehouse", style="cyan")
+    table.add_column("Tracking")
+    table.add_column("Status")
+    table.add_column("Peso/Vol")
+    table.add_column("Llegada USA")
+    table.add_column("Total")
+    for order in result:
+        table.add_row(
+            order.warehouse,
+            order.tracking,
+            order.status,
+            order.weight,
+            order.arrived_usa,
+            order.total,
+        )
+    console.print(table)
+
+
 if __name__ == "__main__":
     app()
