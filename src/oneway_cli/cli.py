@@ -13,7 +13,7 @@ from rich.table import Table
 from . import client
 
 
-app = typer.Typer(no_args_is_help=True, add_completion=False)
+app = typer.Typer(no_args_is_help=True, add_completion=True)
 console = Console()
 error_console = Console(stderr=True)
 VERSION = version("oneway-cli")
