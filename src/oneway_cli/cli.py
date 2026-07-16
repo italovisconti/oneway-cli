@@ -9,7 +9,6 @@ import typer
 from curl_cffi.requests import RequestsError
 from rich.console import Console
 from rich.table import Table
-from typer.completion import install_callback, show_callback
 from typer.core import TyperCommand, TyperGroup, TyperOption
 
 from . import client
@@ -31,7 +30,7 @@ class SpanishTyperCommand(TyperCommand):
         return option
 
 
-app = typer.Typer(no_args_is_help=True, add_completion=False, cls=SpanishTyperGroup)
+app = typer.Typer(no_args_is_help=True, add_completion=True, cls=SpanishTyperGroup)
 console = Console()
 error_console = Console(stderr=True)
 VERSION = version("oneway-cli")
@@ -54,26 +53,6 @@ def main(
         bool,
         typer.Option("--version", callback=version_callback, is_eager=True, help="Mostrar versión"),
     ] = False,
-    install_completion: Annotated[
-        bool | None,
-        typer.Option(
-            "--install-completion",
-            callback=install_callback,
-            is_eager=True,
-            expose_value=False,
-            help="Instalar el autocompletado para el shell actual.",
-        ),
-    ] = None,
-    show_completion: Annotated[
-        bool | None,
-        typer.Option(
-            "--show-completion",
-            callback=show_callback,
-            is_eager=True,
-            expose_value=False,
-            help="Mostrar el script de autocompletado del shell actual.",
-        ),
-    ] = None,
 ) -> None:
     """Cliente de terminal no oficial de One Way Cargo."""
 
