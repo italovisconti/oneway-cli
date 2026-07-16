@@ -12,7 +12,7 @@
 
 # oneway-cli
 
-Cliente de línea de comandos no oficial para consultar trackings, historial y alertas de cuentas One Way Cargo.
+CLI no oficial para consultar trackings, historial y alertas de cuentas One Way Cargo.
 
 ## Estado
 
