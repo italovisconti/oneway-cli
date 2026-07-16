@@ -74,6 +74,37 @@ class TrackingResult:
 
 
 @dataclass(frozen=True)
+class OrderCharge:
+    warehouse: str
+    status: str
+    label: str
+    total: str
+
+
+@dataclass(frozen=True)
+class RepackedPackage:
+    warehouse: str
+    tracking: str
+    dimensions: str
+    weight: str
+    arrived_usa: str
+    arrived_venezuela: str
+    total: str
+
+
+@dataclass(frozen=True)
+class OrdersResult:
+    orders: list[Order]
+    total: str
+
+    def __iter__(self):
+        return iter(self.orders)
+
+    def __len__(self) -> int:
+        return len(self.orders)
+
+
+@dataclass(frozen=True)
 class Order:
     warehouse: str
     status: str
@@ -85,6 +116,9 @@ class Order:
     notes: str
     total: str
     is_detail: bool
+    order_uuid: str
+    charges: list[OrderCharge]
+    repacked_packages: list[RepackedPackage]
 
 
 def ensure_config_dir() -> None:
@@ -327,47 +361,158 @@ def alert_form(session: requests.Session) -> dict[str, str]:
     return fields
 
 
-def orders(session: requests.Session) -> list[Order]:
-    response = protected_get(session, ORDERS_URL)
-    soup = BeautifulSoup(response.text, "html.parser")
-    tables = soup.find_all("table")
-    if not tables:
-        raise OneWayError("La página de órdenes no contiene una tabla.")
-    table = tables[0]
-    rows = table.find_all("tr")
-    result: list[Order] = []
-    for row in rows:
-        cells = row.find_all(["td", "th"])
+def _find_orders_table(soup: BeautifulSoup) -> Any:
+    """Locate the desktop 9-column orders table.
+
+    Primary: table containing an anchor with */onewayidv2/orders/{uuid}.
+    Fallback: first table with any 9‑cell row (empty‑orders page).
+    Returns None when neither is found.
+    """
+    table = soup.select_one('table:has(a[href*="/onewayidv2/orders/"])')
+    if table is not None:
+        return table
+    for candidate in soup.find_all("table"):
+        for row in candidate.find_all("tr"):
+            if len(row.find_all(["td", "th"])) >= 9:
+                return candidate
+    return None
+
+
+def _is_empty_text(val: str) -> bool:
+    """True for strings that represent an empty/placeholder cell."""
+    return not val or val.strip("—–-\u00a0 ") == ""
+
+
+def parse_orders(html: str) -> OrdersResult:
+    """Parse the desktop 9-column orders table from raw HTML.
+
+    Returns an OrdersResult with parsed main orders, their repacked packages
+    and charges, and the page-provided final total.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+
+    orders_table = _find_orders_table(soup)
+    if orders_table is None:
+        raise OneWayError(
+            "No se encontró la tabla de órdenes (9 columnas escritorio)."
+        )
+
+    orders: list[Order] = []
+    total: str = ""
+
+    # Accumulation state for the current main order
+    pending: dict[str, Any] | None = None
+    pending_charges: list[OrderCharge] = []
+    pending_repacked: list[RepackedPackage] = []
+
+    for tr in orders_table.find_all("tr"):
+        cells = tr.find_all(["td", "th"])
+        if not cells:
+            continue
+
+        cell_texts = [text(cell) for cell in cells]
+
+        # Total footer row — may have colspan, handle before cell count gate
+        if cell_texts[0].lower().startswith("total"):
+            total = cell_texts[-1]
+            continue
+
+        # Skip header row
+        if cell_texts[0].lower() == "warehouse":
+            continue
+
+        # Only rows with 9+ cells are data rows
         if len(cells) < 9:
             continue
-        values = [text(cell) for cell in cells]
-        header = values[0].lower()
-        if header == "warehouse" or header.startswith("total"):
-            continue
-        warehouse = values[0].split()[0] if values[0] else ""
-        status = " ".join(values[1].split())
-        tracking = values[2].upper()
-        dimensions = values[3]
-        weight = values[4]
-        arrived_usa = values[5]
-        arrived_venezuela = values[6]
-        notes = values[7]
-        total = values[8]
-        is_detail = not tracking and not dimensions and not weight
-        result.append(
-            Order(
-                warehouse=warehouse,
-                status=status,
+
+        # Main order row — has a link to /onewayidv2/orders/{uuid}
+        uuid_link = tr.select_one('a[href*="/onewayidv2/orders/"]')
+
+        if uuid_link is not None:
+            # Flush previous pending order
+            if pending is not None:
+                orders.append(
+                    Order(
+                        **pending,
+                        charges=list(pending_charges),
+                        repacked_packages=list(pending_repacked),
+                    )
+                )
+
+            href = str(uuid_link.get("href") or "")
+            match = re.search(r"/onewayidv2/orders/([\w-]+)", href)
+            order_uuid = match.group(1) if match else ""
+
+            tracking = cell_texts[2].upper()
+            dimensions = cell_texts[3]
+            weight = cell_texts[4]
+
+            pending = dict(
+                warehouse=cell_texts[0].split()[0] if cell_texts[0] else "",
+                status=cell_texts[1],
                 tracking=tracking,
                 dimensions=dimensions,
                 weight=weight,
-                arrived_usa=arrived_usa,
-                arrived_venezuela=arrived_venezuela,
-                notes=notes,
-                total=total,
-                is_detail=is_detail,
+                arrived_usa=cell_texts[5],
+                arrived_venezuela=cell_texts[6],
+                notes=cell_texts[7],
+                total=cell_texts[8],
+                is_detail=_is_empty_text(tracking)
+                and _is_empty_text(dimensions)
+                and _is_empty_text(weight),
+                order_uuid=order_uuid,
+            )
+            pending_charges = []
+            pending_repacked = []
+        elif pending is not None:
+            # Struck-through repacked child row
+            if tr.select_one(".line-through"):
+                pending_repacked.append(
+                    RepackedPackage(
+                        warehouse=cell_texts[0],
+                        tracking=cell_texts[2].upper(),
+                        dimensions=cell_texts[3],
+                        weight=cell_texts[4],
+                        arrived_usa=cell_texts[5],
+                        arrived_venezuela=cell_texts[6],
+                        total=cell_texts[8],
+                    )
+                )
+            else:
+                # Fee rows — label lives in the Notes column
+                notes_lower = cell_texts[7].lower()
+                fee_label: str | None = None
+                for candidate in ("repack fee", "storage fee", "handling fee"):
+                    if candidate in notes_lower:
+                        fee_label = candidate.title()
+                        break
+
+                if fee_label is not None:
+                    pending_charges.append(
+                        OrderCharge(
+                            warehouse=cell_texts[0],
+                            status=cell_texts[1],
+                            label=fee_label,
+                            total=cell_texts[8],
+                        )
+                    )
+
+    # Flush last pending order
+    if pending is not None:
+        orders.append(
+            Order(
+                **pending,
+                charges=list(pending_charges),
+                repacked_packages=list(pending_repacked),
             )
         )
+
+    return OrdersResult(orders=orders, total=total)
+
+
+def orders(session: requests.Session) -> OrdersResult:
+    response = protected_get(session, ORDERS_URL)
+    result = parse_orders(response.text)
     save_session(session)
     return result
 

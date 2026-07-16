@@ -117,7 +117,9 @@ oneway-cli orders --all
 oneway-cli orders --status "Por Pagar"
 ```
 
-Muestra las órdenes activas del panel de cuentas. Por defecto omite los detalles de costos (handling fee, storage fee, etc.) y excluye las filas marcadas como pagadas. Usa `--all` para ver todas las filas y `--status` para filtrar por un estado específico.
+Muestra las órdenes principales del panel de cuentas en una sola tabla con bordes, una fila por orden. Las columnas son Warehouse, Tracking, Estado, Peso/Vol, Llegada USA, Llegada VEN, Cargos, Reempaques y Total. La celda `Cargos` muestra cada cargo con su etiqueta, monto y estado. La celda `Reempaques` muestra, por cada paquete reempacado, su tracking junto al monto original tachado. Al final se muestra el total general que devuelve el panel.
+
+Por defecto se ocultan las órdenes principales cuyo estado sea `pagado`. Usa `--all` para incluir también las órdenes pagadas. Usa `--status` para filtrar por un estado exacto o parcial de las órdenes principales. `--json` devuelve un JSON anidado con órdenes, cargos, reempaques y el total.
 
 ### Consultar Un Tracking
 
