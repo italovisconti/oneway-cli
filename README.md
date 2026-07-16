@@ -8,7 +8,7 @@ Cliente de línea de comandos no oficial para consultar trackings, historial y a
 
 ## Estado
 
-El proyecto está en desarrollo local. Antes de distribuirlo públicamente, publica el repositorio, registra el paquete en PyPI y verifica que la automatización cumple las condiciones de One Way Cargo.
+El proyecto está en desarrollo local. Antes de distribuirlo públicamente, es necesario publicar el repositorio, registrar el paquete en PyPI y verificar que la automatización cumple las condiciones de One Way Cargo.
 
 ## Características
 
@@ -39,7 +39,7 @@ Alternativa con pipx:
 pipx install .
 ```
 
-Comprueba la instalación:
+Para comprobar la instalación:
 
 ```bash
 oneway-cli --version
@@ -48,15 +48,15 @@ oneway-cli --help
 
 ## Inicio De Sesión
 
-La primera vez que usas el CLI sin credenciales guardadas, cualquier comando protegido te pide el correo y la contraseña de tu cuenta One Way Cargo. Si el login es exitoso, las guarda automáticamente:
+La primera vez que se usa el CLI sin credenciales guardadas, cualquier comando protegido solicita el correo y la contraseña de la cuenta One Way Cargo. Tras un login exitoso, el CLI las guarda automáticamente:
 
 ```bash
 oneway-cli track 1Z19X22R0393685602
-# Correo OneWayID: tu-correo@example.com
+# Correo OneWayID: correo@example.com
 # CI / contraseña OneWayID:
 ```
 
-También puedes iniciar sesión de forma explícita con:
+También es posible iniciar sesión de forma explícita con:
 
 ```bash
 oneway-cli login
@@ -64,14 +64,14 @@ oneway-cli login
 
 En ambos casos:
 
-- El correo se guarda en el directorio de configuración de tu sistema.
+- El correo se guarda en el directorio de configuración del sistema.
 - La contraseña se guarda en el llavero del sistema (Keychain en macOS, Credential Manager en Windows, Secret Service en Linux).
 - Las cookies de sesión se almacenan con permisos restringidos en el directorio de configuración de la aplicación.
 
-Para automatización no interactiva define las variables de entorno `ONEWAY_EMAIL` y `ONEWAY_PASSWORD`. Tienen prioridad sobre las credenciales guardadas:
+Para automatización no interactiva se definen las variables de entorno `ONEWAY_EMAIL` y `ONEWAY_PASSWORD`. Tienen prioridad sobre las credenciales guardadas:
 
 ```bash
-ONEWAY_EMAIL=correo@example.com ONEWAY_PASSWORD=tu-clave oneway-cli track TRACKING
+ONEWAY_EMAIL=correo@example.com ONEWAY_PASSWORD=clave oneway-cli track TRACKING
 ```
 
 Para cerrar sesión:
@@ -125,7 +125,7 @@ Tipos individuales disponibles:
 oneway-cli create-alert TRACKING --type verification --accept-storage-fee
 ```
 
-Antes de enviar una alerta, el CLI consulta las alertas existentes del tracking y no crea un duplicado del mismo tipo. Después del envío, vuelve a consultarlas para confirmar la creación. Repite `--type` para crear varios tipos de alerta con una sola confirmación.
+Antes de enviar una alerta, el CLI consulta las alertas existentes del tracking y no crea un duplicado del mismo tipo. Después del envío, vuelve a consultarlas para confirmar la creación. Repetir `--type` permite crear varios tipos de alerta con una sola confirmación.
 
 `repack` todavía no está disponible porque debe enviar varios trackings y sus consentimientos en una sola operación.
 
@@ -152,10 +152,10 @@ La autenticación respeta el campo temporal del formulario de login. Las operaci
 
 ## Seguridad Y Privacidad
 
-- No incluyas tu contraseña en scripts, historial de shell ni repositorios.
-- El CLI usa tu cuenta y realiza operaciones reales cuando no se usa `--dry-run`.
+- No incluir la contraseña en scripts, historial de shell ni repositorios.
+- El CLI usa la cuenta del usuario y realiza operaciones reales cuando no se usa `--dry-run`.
 - El sitio puede cambiar sus formularios o endpoints sin aviso.
-- Revisa las condiciones de One Way Cargo antes de usar o redistribuir esta herramienta.
+- Revisar las condiciones de One Way Cargo antes de usar o redistribuir esta herramienta.
 
 ## Desarrollo
 
