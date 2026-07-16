@@ -6,6 +6,14 @@
 
 Cliente de línea de comandos no oficial para consultar trackings, historial y alertas de cuentas One Way Cargo.
 
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white" alt="Python" />
+  <img src="https://img.shields.io/badge/CLI-Typer-ff6348" alt="Typer" />
+  <img src="https://img.shields.io/badge/TUI-Rich-212121" alt="Rich" />
+  <img src="https://img.shields.io/badge/HTTP-curl__cffi-FF6C37" alt="curl_cffi" />
+  <img src="https://img.shields.io/badge/License-MIT-4CAF50" alt="License" />
+</p>
+
 ## Estado
 
 El proyecto está en desarrollo local. Antes de distribuirlo públicamente, es necesario publicar el repositorio, registrar el paquete en PyPI y verificar que la automatización cumple las condiciones de One Way Cargo.
