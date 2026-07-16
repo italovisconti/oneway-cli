@@ -2,10 +2,6 @@
   <img src="static/oneway-cli-logo.png" alt="oneway-cli logo" width="220"/>
 </p>
 
-# oneway-cli
-
-Cliente de línea de comandos no oficial para consultar trackings, historial y alertas de cuentas One Way Cargo.
-
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white" alt="Python" />
   <img src="https://img.shields.io/badge/CLI-Typer-ff6348" alt="Typer" />
@@ -13,6 +9,10 @@ Cliente de línea de comandos no oficial para consultar trackings, historial y a
   <img src="https://img.shields.io/badge/HTTP-curl__cffi-FF6C37" alt="curl_cffi" />
   <img src="https://img.shields.io/badge/License-MIT-4CAF50" alt="License" />
 </p>
+
+# oneway-cli
+
+Cliente de línea de comandos no oficial para consultar trackings, historial y alertas de cuentas One Way Cargo.
 
 ## Estado
 
@@ -173,6 +173,10 @@ oneway-cli --help
 ```
 
 El paquete usa `src/oneway_cli/` para el código, `Typer` para comandos, `Rich` para salida, `BeautifulSoup` para analizar listados HTML y `curl_cffi` para las solicitudes autenticadas.
+
+## Descargo
+
+Este proyecto no está afiliado, respaldado ni patrocinado por One Way Cargo. Es una herramienta independiente desarrollada por terceros.
 
 ## Licencia
 
