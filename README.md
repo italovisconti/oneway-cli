@@ -92,7 +92,7 @@ oneway-cli logout --forget-credentials      # también borra correo y clave del 
 
 ## Autocompletion
 
-Typer genera autocompletion para bash, zsh y fish:
+Typer genera scripts de autocompletion para bash, zsh y fish, pero es necesario instalarlos manualmente en el shell por seguridad (pip no modifica archivos de configuración del shell).
 
 ```bash
 oneway-cli --install-completion bash
@@ -103,6 +103,8 @@ Reinicia la terminal o recarga el shell para activarla. Para ver el script sin i
 ```bash
 oneway-cli --show-completion bash
 ```
+
+Una vez activa, al presionar `Tab` después de `oneway-cli` se completan comandos y opciones, junto con una breve descripción de cada uno.
 
 ## Comandos
 

@@ -52,6 +52,7 @@ def session_or_fail(interactive: bool = True) -> tuple[client.requests.Session, 
 def login(
     email: Annotated[str | None, typer.Option("--email", help="Correo OneWayID")] = None,
 ) -> None:
+    """Iniciar sesión y guardar credenciales en el llavero del sistema."""
     try:
         client.login(email)
     except (client.OneWayError, RequestsError) as error:
@@ -65,6 +66,7 @@ def logout(
         bool, typer.Option("--forget-credentials", help="Eliminar correo y clave guardados")
     ] = False,
 ) -> None:
+    """Cerrar sesión local y, opcionalmente, borrar credenciales guardadas."""
     try:
         client.logout(forget_credentials)
     except RequestsError as error:
@@ -74,6 +76,7 @@ def logout(
 
 @app.command("session-status")
 def session_status() -> None:
+    """Mostrar si la sesión guardada sigue activa y cuándo expira."""
     active, expires = client.session_status()
     if not active or expires is None:
         console.print("No hay una sesión activa.")
@@ -99,6 +102,7 @@ def create_alert(
     yes: Annotated[bool, typer.Option("--yes", help="No pedir confirmación")] = False,
     dry_run: Annotated[bool, typer.Option("--dry-run", help="No crear la alerta")] = False,
 ) -> None:
+    """Crear una o más alertas para un tracking."""
     try:
         tracking = client.validate_tracking(tracking)
         requested: list[str] = []
@@ -150,6 +154,7 @@ def alerts(
     tracking: Annotated[str, typer.Argument(help="Número de tracking a consultar")],
     as_json: Annotated[bool, typer.Option("--json", help="Emitir JSON")] = False,
 ) -> None:
+    """Listar las alertas existentes de un tracking."""
     try:
         tracking = client.validate_tracking(tracking)
         session, _ = session_or_fail()
@@ -180,6 +185,7 @@ def track(
     tracking: Annotated[str, typer.Argument(help="Número de tracking a consultar")],
     as_json: Annotated[bool, typer.Option("--json", help="Emitir JSON")] = False,
 ) -> None:
+    """Consultar el estado, peso, dimensiones e historial de un tracking."""
     try:
         tracking = client.validate_tracking(tracking)
         session, _ = session_or_fail()
@@ -219,6 +225,7 @@ def orders(
         bool, typer.Option("--all", help="Mostrar todas las filas incluyendo detalles de costos")
     ] = False,
 ) -> None:
+    """Listar las órdenes/tracking del panel de cuentas."""
     try:
         session, _ = session_or_fail()
         try:
