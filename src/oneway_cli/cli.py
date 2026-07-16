@@ -3,17 +3,35 @@ from __future__ import annotations
 import json
 from datetime import datetime
 from importlib.metadata import version
-from typing import Annotated
+from typing import Annotated, Any
 
 import typer
 from curl_cffi.requests import RequestsError
 from rich.console import Console
 from rich.table import Table
+from typer.completion import install_callback, show_callback
+from typer.core import TyperCommand, TyperGroup, TyperOption
 
 from . import client
 
 
-app = typer.Typer(no_args_is_help=True, add_completion=True)
+class SpanishTyperGroup(TyperGroup):
+    def get_help_option(self, ctx: Any) -> TyperOption | None:
+        option = super().get_help_option(ctx)
+        if option is not None:
+            option.help = "Mostrar esta ayuda y salir."
+        return option
+
+
+class SpanishTyperCommand(TyperCommand):
+    def get_help_option(self, ctx: Any) -> TyperOption | None:
+        option = super().get_help_option(ctx)
+        if option is not None:
+            option.help = "Mostrar esta ayuda y salir."
+        return option
+
+
+app = typer.Typer(no_args_is_help=True, add_completion=False, cls=SpanishTyperGroup)
 console = Console()
 error_console = Console(stderr=True)
 VERSION = version("oneway-cli")
@@ -36,6 +54,26 @@ def main(
         bool,
         typer.Option("--version", callback=version_callback, is_eager=True, help="Mostrar versión"),
     ] = False,
+    install_completion: Annotated[
+        bool | None,
+        typer.Option(
+            "--install-completion",
+            callback=install_callback,
+            is_eager=True,
+            expose_value=False,
+            help="Instalar el autocompletado para el shell actual.",
+        ),
+    ] = None,
+    show_completion: Annotated[
+        bool | None,
+        typer.Option(
+            "--show-completion",
+            callback=show_callback,
+            is_eager=True,
+            expose_value=False,
+            help="Mostrar el script de autocompletado del shell actual.",
+        ),
+    ] = None,
 ) -> None:
     """Cliente de terminal no oficial de One Way Cargo."""
 
@@ -48,7 +86,7 @@ def session_or_fail(interactive: bool = True) -> tuple[client.requests.Session, 
         raise AssertionError("unreachable")
 
 
-@app.command()
+@app.command(cls=SpanishTyperCommand)
 def login(
     email: Annotated[str | None, typer.Option("--email", help="Correo OneWayID")] = None,
 ) -> None:
@@ -60,7 +98,7 @@ def login(
     console.print("[green]Sesión iniciada y credenciales guardadas en el llavero del sistema.[/]")
 
 
-@app.command()
+@app.command(cls=SpanishTyperCommand)
 def logout(
     forget_credentials: Annotated[
         bool, typer.Option("--forget-credentials", help="Eliminar correo y clave guardados")
@@ -74,7 +112,7 @@ def logout(
     console.print("[green]Sesión local eliminada.[/]")
 
 
-@app.command("session-status")
+@app.command("session-status", cls=SpanishTyperCommand)
 def session_status() -> None:
     """Mostrar si la sesión guardada sigue activa y cuándo expira."""
     active, expires = client.session_status()
@@ -85,7 +123,7 @@ def session_status() -> None:
     console.print(f"Sesión activa hasta {timestamp}.")
 
 
-@app.command("create-alert")
+@app.command("create-alert", cls=SpanishTyperCommand)
 def create_alert(
     tracking: Annotated[str, typer.Argument(help="Número de tracking a registrar")],
     alert_types: Annotated[
@@ -149,7 +187,7 @@ def create_alert(
         fail(str(error))
 
 
-@app.command()
+@app.command(cls=SpanishTyperCommand)
 def alerts(
     tracking: Annotated[str, typer.Argument(help="Número de tracking a consultar")],
     as_json: Annotated[bool, typer.Option("--json", help="Emitir JSON")] = False,
@@ -180,7 +218,7 @@ def alerts(
     console.print(table)
 
 
-@app.command()
+@app.command(cls=SpanishTyperCommand)
 def track(
     tracking: Annotated[str, typer.Argument(help="Número de tracking a consultar")],
     as_json: Annotated[bool, typer.Option("--json", help="Emitir JSON")] = False,
@@ -215,7 +253,7 @@ def track(
         console.print(history)
 
 
-@app.command()
+@app.command(cls=SpanishTyperCommand)
 def orders(
     as_json: Annotated[bool, typer.Option("--json", help="Emitir JSON")] = False,
     status_filter: Annotated[

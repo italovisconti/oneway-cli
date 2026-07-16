@@ -90,21 +90,21 @@ oneway-cli logout                          # solo borra la sesión local
 oneway-cli logout --forget-credentials      # también borra correo y clave del llavero
 ```
 
-## Autocompletion
+## Autocompletado
 
-Typer genera scripts de autocompletion para bash, zsh y fish, pero es necesario instalarlos manualmente en el shell por seguridad (pip no modifica archivos de configuración del shell).
+Typer genera scripts de autocompletado para bash, zsh y fish, pero es necesario instalarlos manualmente en el shell por seguridad (pip no modifica archivos de configuración del shell).
 
 ```bash
-oneway-cli --install-completion bash
+oneway-cli --install-completion
 ```
 
 Reinicia la terminal o recarga el shell para activarla. Para ver el script sin instalarlo:
 
 ```bash
-oneway-cli --show-completion bash
+oneway-cli --show-completion
 ```
 
-Una vez activa, al presionar `Tab` después de `oneway-cli` se completan comandos y opciones, junto con una breve descripción de cada uno.
+Una vez activo, al presionar `Tab` después de `oneway-cli` se completan comandos y opciones, junto con una breve descripción de cada uno.
 
 ## Comandos
 
