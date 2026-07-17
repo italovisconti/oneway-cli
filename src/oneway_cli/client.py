@@ -237,8 +237,15 @@ def serialize_session(session: requests.Session) -> list[dict[str, Any]]:
     return list(cookies.values())
 
 
+SESSION_MAX_AGE_SECONDS = 3600  # 1 hora
+
+
 def save_session(session: requests.Session) -> None:
-    atomic_write(SESSION_PATH, json.dumps({"cookies": serialize_session(session)}), 0o600)
+    atomic_write(
+        SESSION_PATH,
+        json.dumps({"cookies": serialize_session(session), "saved_at": time.time()}),
+        0o600,
+    )
 
 
 def session_payload() -> dict[str, Any] | None:
@@ -255,9 +262,21 @@ def restore_session(session: requests.Session) -> bool:
     if names != {"XSRF-TOKEN", "one_way_cargo_session"}:
         clear_session()
         return False
-    if any(not isinstance(cookie.get("expires"), int | float) or cookie["expires"] <= time.time() for cookie in cookies):
-        clear_session()
-        return False
+
+    # Determine the earliest expiration boundary: cookie expires (if present)
+    # or the local 1-hour limit from when the session was saved.
+    saved_at = payload.get("saved_at") if isinstance(payload, dict) else None
+    local_limit = (saved_at + SESSION_MAX_AGE_SECONDS) if isinstance(saved_at, int | float) else None
+    now = time.time()
+    for cookie in cookies:
+        cookie_expires = cookie.get("expires")
+        if isinstance(cookie_expires, int | float) and cookie_expires <= now:
+            clear_session()
+            return False
+        if local_limit is not None and local_limit <= now:
+            clear_session()
+            return False
+
     try:
         for cookie in cookies:
             session.cookies.set(
@@ -638,12 +657,17 @@ def session_status() -> tuple[bool, int | None]:
     cookies = payload.get("cookies") if payload else None
     if not isinstance(cookies, list):
         return False, None
-    expirations = [
+    now = time.time()
+    cookie_expirations = [
         int(cookie["expires"])
         for cookie in cookies
         if isinstance(cookie, dict) and isinstance(cookie.get("expires"), int | float)
     ]
-    if len(expirations) != 2:
-        return False, None
-    expires = min(expirations)
-    return expires > time.time(), expires
+    if cookie_expirations:
+        expires = min(cookie_expirations)
+    else:
+        saved_at = payload.get("saved_at") if isinstance(payload, dict) else None
+        if not isinstance(saved_at, int | float):
+            return False, None
+        expires = int(saved_at + SESSION_MAX_AGE_SECONDS)
+    return expires > now, expires
