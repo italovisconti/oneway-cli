@@ -57,7 +57,7 @@ def main(
         typer.Option("--version", callback=version_callback, is_eager=True, help="Mostrar versión"),
     ] = False,
 ) -> None:
-    """Cliente de terminal no oficial de One Way Cargo."""
+    """CLI no oficial de One Way Cargo."""
 
 
 def _session_spinner() -> Any:
