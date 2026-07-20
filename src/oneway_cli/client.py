@@ -536,15 +536,24 @@ def orders(session: requests.Session) -> OrdersResult:
     return result
 
 
-def alerts_for_tracking(session: requests.Session, tracking: str) -> list[Alert]:
-    response = protected_get(session, ALERTS_URL, params={"tracking": tracking})
-    soup = BeautifulSoup(response.text, "html.parser")
+def parse_alerts_html(html: str, tracking: str) -> list[Alert]:
+    """Parse alerts table HTML into Alert objects, filtering by tracking number.
+
+    Pure function — no session, no network.
+    """
+    soup = BeautifulSoup(html, "html.parser")
     alerts: list[Alert] = []
     for row in soup.select("table tbody tr"):
         cells = row.find_all("td")
         if len(cells) < 4 or text(cells[2]).upper() != tracking:
             continue
         alerts.append(Alert(text(cells[0]), text(cells[1]), text(cells[2]).upper(), text(cells[3])))
+    return alerts
+
+
+def alerts_for_tracking(session: requests.Session, tracking: str) -> list[Alert]:
+    response = protected_get(session, ALERTS_URL, params={"tracking": tracking})
+    alerts = parse_alerts_html(response.text, tracking)
     save_session(session)
     return alerts
 
@@ -577,8 +586,6 @@ def create_alert(
     location = urljoin(ALERT_URL, response.headers.get("location", ""))
     if location.rstrip("/") == LOGIN_URL.rstrip("/"):
         raise AuthenticationExpired("La sesión expiró durante la creación de la alerta.")
-    if not alert_type_exists(alerts_for_tracking(session, tracking), alert_type):
-        raise OneWayError("El servidor no confirmó la creación de la alerta.")
 
 
 def lookup_tracking(session: requests.Session, tracking: str) -> TrackingResult:
@@ -600,6 +607,17 @@ def lookup_tracking(session: requests.Session, tracking: str) -> TrackingResult:
         payload = response.json()
     except ValueError as error:
         raise OneWayError("El servidor devolvió una respuesta de tracking inválida.") from error
+    result = parse_tracking_payload(payload, tracking)
+    save_session(session)
+    return result
+
+
+def parse_tracking_payload(payload: Any, tracking: str) -> TrackingResult:
+    """Parse a tracking JSON dict into a TrackingResult.
+
+    Pure function — no session, no network.
+    Raises OneWayError when the payload is invalid.
+    """
     if not isinstance(payload, dict) or "uuid" not in payload:
         raise OneWayError(f"No se encontró información para {tracking}.")
     updates = payload.get("warehouse_updates")
@@ -608,7 +626,6 @@ def lookup_tracking(session: requests.Session, tracking: str) -> TrackingResult:
         for update in updates
         if isinstance(update, dict)
     ] if isinstance(updates, list) else []
-    save_session(session)
     return TrackingResult(
         tracking=tracking,
         weight=str(payload.get("peso", "-")),

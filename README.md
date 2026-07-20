@@ -12,160 +12,132 @@
 
 # oneway-cli
 
-CLI no oficial para consultar trackings, historial y alertas de cuentas One Way Cargo.
+CLI no oficial para consultar trackings, órdenes y alertas de cuentas One Way Cargo desde la terminal.
 
-## Estado
+<!-- TODO: agregar capturas/GIFs en docs/images/ -->
 
-El proyecto está en desarrollo local. Antes de distribuirlo públicamente, es necesario publicar el repositorio, registrar el paquete en PyPI y verificar que la automatización cumple las condiciones de One Way Cargo.
-
-## Características
-
-- Inicio y cierre de sesión.
-- Caché de sesión de dos horas con renovación automática.
-- Consulta de tracking e historial mediante el endpoint estructurado del sitio.
-- Listado de órdenes/tracking pendientes desde el panel de cuentas.
-- Consulta de alertas existentes por tracking.
-- Creación confirmada de alertas individuales sin duplicados.
-- Salida JSON para integrar con otros scripts.
-
-## Requisitos
-
-- Python 3.11 o superior.
-- Un llavero del sistema disponible: Keychain en macOS, Credential Manager en Windows o Secret Service en Linux.
-- Cuenta activa de One Way Cargo.
-
-## Instalación Desde Código Fuente
+## Uso rápido
 
 ```bash
-git clone <URL-DEL-REPOSITORIO> oneway-cli
+# Iniciar sesión
+oneway-cli login
+
+# Listar órdenes pendientes
+oneway-cli orders
+
+# Consultar un tracking
+oneway-cli track 1Z19X22R0393685602
+
+# Crear una alerta
+oneway-cli create-alert 1Z19X22R0393685602 --type aereo
+```
+
+La primera vez que se ejecuta un comando protegido, el CLI solicita el correo y la contraseña de One Way Cargo. También se pueden definir las variables de entorno `ONEWAY_EMAIL` y `ONEWAY_PASSWORD` para ejecuciones no interactivas.
+
+## Instalación
+
+### Desde GitHub Releases
+
+Instalar la rueda de la versión v0.3.0 directamente con `pipx`:
+
+```bash
+pipx install https://github.com/italovisconti/oneway-cli/releases/download/v0.3.0/oneway_cli-0.3.0-py3-none-any.whl
+```
+
+Alternativa con `pip`:
+
+```bash
+python -m pip install --user https://github.com/italovisconti/oneway-cli/releases/download/v0.3.0/oneway_cli-0.3.0-py3-none-any.whl
+```
+
+### Desde el código fuente
+
+```bash
+git clone https://github.com/italovisconti/oneway-cli.git
 cd oneway-cli
 uv tool install .
 ```
 
-Alternativa con pipx:
+Alternativa con `pipx`:
 
 ```bash
 pipx install .
 ```
 
-Para comprobar la instalación:
+Verificar la instalación:
 
 ```bash
 oneway-cli --version
 oneway-cli --help
 ```
 
-## Inicio De Sesión
+### Autocompletado
 
-La primera vez que se usa el CLI sin credenciales guardadas, cualquier comando protegido solicita el correo y la contraseña de la cuenta One Way Cargo. Tras un login exitoso, el CLI las guarda automáticamente:
-
-```bash
-oneway-cli track 1Z19X22R0393685602
-# Correo OneWayID: correo@example.com
-# CI / contraseña OneWayID:
-```
-
-También es posible iniciar sesión de forma explícita con:
-
-```bash
-oneway-cli login
-```
-
-En ambos casos:
-
-- El correo se guarda en el directorio de configuración del sistema.
-- La contraseña se guarda en el llavero del sistema (Keychain en macOS, Credential Manager en Windows, Secret Service en Linux).
-- Las cookies de sesión se almacenan con permisos restringidos en el directorio de configuración de la aplicación.
-
-Para automatización no interactiva se definen las variables de entorno `ONEWAY_EMAIL` y `ONEWAY_PASSWORD`. Tienen prioridad sobre las credenciales guardadas:
-
-```bash
-ONEWAY_EMAIL=correo@example.com ONEWAY_PASSWORD=clave oneway-cli track TRACKING
-```
-
-Para cerrar sesión:
-
-```bash
-oneway-cli logout                          # solo borra la sesión local
-oneway-cli logout --forget-credentials      # también borra correo y clave del llavero
-```
-
-## Autocompletado
-
-Typer genera scripts de autocompletado para bash, zsh y fish, pero es necesario instalarlos manualmente en el shell por seguridad (pip no modifica archivos de configuración del shell).
+Generar e instalar el script de autocompletado para el shell activo:
 
 ```bash
 oneway-cli --install-completion
 ```
 
-Reinicia la terminal o recarga el shell para activarla. Para ver el script sin instalarlo:
+Reiniciar la terminal o recargar el shell para activarlo.
 
-```bash
-oneway-cli --show-completion
-```
+## Comandos principales
 
-Una vez activo, al presionar `Tab` después de `oneway-cli` se completan comandos y opciones, junto con una breve descripción de cada uno.
-
-## Comandos
-
-### Listar Órdenes
+### Órdenes
 
 ```bash
 oneway-cli orders
-oneway-cli orders --json
 oneway-cli orders --all
 oneway-cli orders --status "Por Pagar"
+oneway-cli orders --json
 ```
 
-Muestra las órdenes principales del panel de cuentas en una sola tabla con bordes, una fila por orden. Las columnas son Warehouse, Tracking, Estado, Peso/Vol, Llegada USA, Llegada VEN, Cargos, Reempaques y Total. La celda `Cargos` muestra cada cargo con su etiqueta, monto y estado. La celda `Reempaques` muestra, por cada paquete reempacado, su tracking junto al monto original tachado. Al final se muestra el total general que devuelve el panel.
+Muestra las órdenes principales del panel de cuentas. Cada fila representa una orden principal e incluye warehouse, tracking, estado, peso/volumen, llegadas a USA y Venezuela, cargos, reempaques y el total que devuelve la página.
 
-Por defecto se ocultan las órdenes principales cuyo estado sea `pagado`. Usa `--all` para incluir también las órdenes pagadas. Usa `--status` para filtrar por un estado exacto o parcial de las órdenes principales. `--json` devuelve un JSON anidado con órdenes, cargos, reempaques y el total.
+La columna `Cargos` lista cada cargo con su etiqueta, monto y estado. La columna `Reempaques` muestra, por cada paquete reempacado, su tracking junto al monto original tachado. Al final se imprime el total general reportado por el panel.
 
-### Consultar Un Tracking
+Por defecto se ocultan las órdenes en estado `pagado`. Usar `--all` para incluirlas. Usar `--status` para filtrar por un estado exacto o parcial. `--json` devuelve un JSON anidado con órdenes, cargos, reempaques y el total.
+
+### Tracking
 
 ```bash
 oneway-cli track 1Z19X22R0393685602
 oneway-cli track 1Z19X22R0393685602 --json
 ```
 
-Muestra llegada a Miami y Venezuela, peso, dimensiones e historial de movimientos.
+Muestra llegada a Miami y Venezuela, peso, dimensiones e historial de movimientos del tracking.
 
-### Consultar Alertas
+### Alertas
 
 ```bash
 oneway-cli alerts TRACKING
 oneway-cli alerts TRACKING --json
 ```
 
-### Crear Una Alerta
+Lista las alertas existentes del tracking.
+
+### Crear alerta
 
 ```bash
 oneway-cli create-alert TRACKING --type aereo
 oneway-cli create-alert TRACKING --type maritimo --yes
-oneway-cli create-alert TRACKING --type compactar
 oneway-cli create-alert TRACKING --type aereo --type compactar
 ```
 
-Tipos individuales disponibles:
+Tipos disponibles:
 
-| Tipo API | Descripción |
+| Tipo | Descripción |
 | --- | --- |
-| `aereo` | Alerta Aérea |
-| `maritimo` | Alerta Marítima |
-| `compactar` | Solicita compactar un solo paquete |
-| `verification` | Solicita verificación del contenido |
-| `quotation` | Solicita cotización |
-| `hold` | Solicita retener un paquete |
+| `aereo` | Alerta aérea |
+| `maritimo` | Alerta marítima |
+| `compactar` | Solicitar compactar un paquete |
+| `verification` | Solicitar verificación de contenido |
+| `quotation` | Solicitar cotización |
+| `hold` | Solicitar retener un paquete |
 
-`verification`, `quotation` y `hold` requieren una aceptación explícita del cargo de almacenamiento cuando aplique:
+`verification`, `quotation` y `hold` requieren `--accept-storage-fee` cuando aplique un cargo de almacenamiento.
 
-```bash
-oneway-cli create-alert TRACKING --type verification --accept-storage-fee
-```
-
-Antes de enviar una alerta, el CLI consulta las alertas existentes del tracking y no crea un duplicado del mismo tipo. Después del envío, vuelve a consultarlas para confirmar la creación. Repetir `--type` permite crear varios tipos de alerta con una sola confirmación.
-
-`repack` todavía no está disponible porque debe enviar varios trackings y sus consentimientos en una sola operación.
+El CLI consulta las alertas existentes antes de crear una y evita duplicados del mismo tipo. Después del envío vuelve a consultarlas para confirmar la creación. El tipo `repack` aún no está disponible porque requiere enviar varios trackings y sus consentimientos en una sola operación.
 
 ### Sesión
 
@@ -175,7 +147,13 @@ oneway-cli logout
 oneway-cli logout --forget-credentials
 ```
 
-`logout` elimina la sesión local. `--forget-credentials` también elimina el correo y la clave almacenada en el llavero.
+`logout` elimina la sesión local. Con `--forget-credentials` también borra el correo y la clave del llavero del sistema.
+
+## Requisitos
+
+- Python 3.11 o superior.
+- Cuenta activa de One Way Cargo.
+- Un llavero del sistema disponible: Keychain en macOS, Credential Manager en Windows o Secret Service en Linux.
 
 ## Arquitectura
 
@@ -186,14 +164,11 @@ Typer CLI
   -> config platformdirs + credenciales keyring + caché privada de sesión
 ```
 
-La autenticación respeta el campo temporal del formulario de login. Las operaciones protegidas detectan la redirección al login y no declaran éxito hasta confirmar el resultado en el sitio.
+La autenticación respeta el campo temporal del formulario de login. Las operaciones protegidas detectan redirecciones al login y no declaran éxito hasta confirmar el resultado en el sitio. La sesión se almacena en caché durante una hora con renovación automática.
 
-## Seguridad Y Privacidad
+## Estado
 
-- No incluir la contraseña en scripts, historial de shell ni repositorios.
-- El CLI usa la cuenta del usuario y realiza operaciones reales cuando no se usa `--dry-run`.
-- El sitio puede cambiar sus formularios o endpoints sin aviso.
-- Revisar las condiciones de One Way Cargo antes de usar o redistribuir esta herramienta.
+El repositorio es público y las releases están disponibles en GitHub. PyPI es el siguiente canal de publicación opcional.
 
 ## Desarrollo
 
@@ -202,7 +177,14 @@ python -m pip install --user -e .
 oneway-cli --help
 ```
 
-El paquete usa `src/oneway_cli/` para el código, `Typer` para comandos, `Rich` para salida, `BeautifulSoup` para analizar listados HTML y `curl_cffi` para las solicitudes autenticadas.
+El paquete usa `src/oneway_cli/`, `Typer` para los comandos, `Rich` para la salida, `BeautifulSoup` para analizar listados HTML y `curl_cffi` para las solicitudes autenticadas.
+
+## Seguridad y privacidad
+
+- No incluir la contraseña en scripts, historial de shell ni repositorios.
+- El CLI usa la cuenta del usuario y realiza operaciones reales en el sitio.
+- El sitio puede cambiar formularios o endpoints sin aviso.
+- Revisar las condiciones de One Way Cargo antes de usar o redistribuir esta herramienta.
 
 ## Licencia
 

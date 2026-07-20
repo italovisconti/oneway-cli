@@ -20,6 +20,10 @@ dependencies = [
 
 license = "MIT"
 
+[project.urls]
+Repository = "https://github.com/italovisconti/oneway-cli"
+Issues = "https://github.com/italovisconti/oneway-cli/issues"
+
 [project.scripts]
 oneway-cli = "oneway_cli.cli:app"
 
