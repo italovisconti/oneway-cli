@@ -39,27 +39,32 @@ La primera vez que se ejecuta un comando protegido, el CLI solicita el correo y 
 
 ## Instalación
 
-### Desde GitHub Releases
+### Desde PyPI
 
-Instalar la rueda de la versión v0.4.2 directamente con `pipx`:
+Instalar con `pipx`:
 
 ```bash
-pipx install https://github.com/italovisconti/oneway-cli/releases/download/v0.4.2/oneway_cli-0.4.2-py3-none-any.whl
+pipx install oneway-cli
 ```
 
 Alternativa con `uv`:
 
 ```bash
-uv tool install https://github.com/italovisconti/oneway-cli/releases/download/v0.4.2/oneway_cli-0.4.2-py3-none-any.whl
+uv tool install oneway-cli
 ```
 
 Alternativa con `pip`:
 
 ```bash
-python -m pip install --user https://github.com/italovisconti/oneway-cli/releases/download/v0.4.2/oneway_cli-0.4.2-py3-none-any.whl
+python -m pip install --user oneway-cli
 ```
 
-Cada release usa una URL con su versión. Para instalar una versión posterior, ejecutar el mismo comando con la nueva URL y `--force`.
+Actualizar una instalación existente:
+
+```bash
+pipx upgrade oneway-cli
+uv tool upgrade oneway-cli
+```
 
 ### Desde el código fuente
 
@@ -188,7 +193,7 @@ La autenticación respeta el campo temporal del formulario de login. Las operaci
 
 ## Estado
 
-El repositorio es público y las releases están disponibles en GitHub. PyPI es el siguiente canal de publicación opcional.
+El proyecto está disponible en PyPI y las releases de GitHub incluyen sus notas de versión.
 
 ## Desarrollo
 
