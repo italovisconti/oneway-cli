@@ -126,8 +126,9 @@ def login(
 ) -> None:
     """Iniciar sesión y guardar credenciales en el llavero del sistema."""
     try:
+        email, password = client.login_credentials(email)
         with _login_spinner():
-            client.login(email)
+            client.login(email, password)
     except (client.OneWayError, RequestsError) as error:
         fail(str(error))
     console.print("[green]Sesión iniciada y credenciales guardadas en el llavero del sistema.[/]")

@@ -329,14 +329,30 @@ def credentials(interactive: bool) -> tuple[str, str, bool]:
 def perform_login(session: requests.Session, email: str, password: str) -> None:
     response = session.get(LOGIN_URL, timeout=30)
     response.raise_for_status()
-    fields = form_fields(response.text)
     soup = BeautifulSoup(response.text, "html.parser")
+    login_form = soup.select_one("#login_form")
+    if login_form is None:
+        raise OneWayError("El formulario de inicio de sesión no está disponible.")
+    fields = {
+        str(field["name"]): str(field.get("value", ""))
+        for field in login_form.select("input[name]")
+        if field.get("type") not in {"email", "password", "submit"}
+    }
+    # Detect and include dynamically named honeypot field (direccion_completa_*)
+    honeypot_name: str | None = None
+    honeypot = soup.select_one('input[name^="direccion_completa"]')
+    if honeypot:
+        name_val = honeypot.get("name")
+        if isinstance(name_val, str):
+            honeypot_name = name_val
+    if honeypot_name:
+        fields[honeypot_name] = ""
+
     valid_from = soup.select_one('input[name="valid_from"]')
     fields.update(
         {
             "email": email,
             "ci_password": password,
-            "direccion_completa_eSvuUiClgZ8AHWPn": "",
             "valid_from": str(valid_from.get("value", "")) if valid_from else "",
         }
     )
@@ -636,11 +652,17 @@ def parse_tracking_payload(payload: Any, tracking: str) -> TrackingResult:
     )
 
 
-def login(email: str | None = None) -> None:
+def login_credentials(email: str | None = None) -> tuple[str, str]:
     if not sys.stdin.isatty():
         raise OneWayError("`oneway-cli login` requiere una terminal interactiva.")
     email = email or input("Correo OneWayID: ").strip()
     password = getpass.getpass("CI / contraseña OneWayID: ")
+    return email, password
+
+
+def login(email: str | None = None, password: str | None = None) -> None:
+    if email is None or password is None:
+        email, password = login_credentials(email)
     session = requests.Session(impersonate="chrome")
     try:
         perform_login(session, email, password)

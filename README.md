@@ -147,7 +147,7 @@ oneway-cli logout
 oneway-cli logout --forget-credentials
 ```
 
-`logout` elimina la sesión local. Con `--forget-credentials` también borra el correo y la clave del llavero del sistema.
+`logout` elimina la sesión local, pero conserva el correo y la clave del llavero para poder iniciar sesión de nuevo. Con `--forget-credentials` también borra esas credenciales.
 
 ## Requisitos
 
