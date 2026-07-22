@@ -26,13 +26,13 @@ ow-cli login
 ow-cli orders
 
 # Consultar un tracking
-ow-cli track 1Z19X22R0393685602
+ow-cli track <TRACKING>
 
 # Crear una alerta
-ow-cli create-alert 1Z19X22R0393685602 --type aereo
+ow-cli create-alert <TRACKING> --type aereo
 
 # Eliminar una alerta
-ow-cli delete-alert 1Z19X22R0393685602 --type aereo
+ow-cli delete-alert <TRACKING> --type aereo
 ```
 
 La primera vez que se ejecuta un comando protegido, el CLI solicita el correo y la contraseña de One Way Cargo. También se pueden definir las variables de entorno `ONEWAY_EMAIL` y `ONEWAY_PASSWORD` para ejecuciones no interactivas.
@@ -41,22 +41,22 @@ La primera vez que se ejecuta un comando protegido, el CLI solicita el correo y 
 
 ### Desde GitHub Releases
 
-Instalar la rueda de la versión v0.4.0 directamente con `pipx`:
+Instalar la rueda de la versión v0.4.1 directamente con `pipx`:
 
 ```bash
-pipx install https://github.com/italovisconti/oneway-cli/releases/download/v0.4.0/oneway_cli-0.4.0-py3-none-any.whl
+pipx install https://github.com/italovisconti/oneway-cli/releases/download/v0.4.1/oneway_cli-0.4.1-py3-none-any.whl
 ```
 
 Alternativa con `uv`:
 
 ```bash
-uv tool install https://github.com/italovisconti/oneway-cli/releases/download/v0.4.0/oneway_cli-0.4.0-py3-none-any.whl
+uv tool install https://github.com/italovisconti/oneway-cli/releases/download/v0.4.1/oneway_cli-0.4.1-py3-none-any.whl
 ```
 
 Alternativa con `pip`:
 
 ```bash
-python -m pip install --user https://github.com/italovisconti/oneway-cli/releases/download/v0.4.0/oneway_cli-0.4.0-py3-none-any.whl
+python -m pip install --user https://github.com/italovisconti/oneway-cli/releases/download/v0.4.1/oneway_cli-0.4.1-py3-none-any.whl
 ```
 
 Cada release usa una URL con su versión. Para instalar una versión posterior, ejecutar el mismo comando con la nueva URL y `--force`.
@@ -112,8 +112,8 @@ Por defecto se ocultan las órdenes en estado `pagado`. Usar `--all` para inclui
 ### Tracking
 
 ```bash
-ow-cli track 1Z19X22R0393685602
-ow-cli track 1Z19X22R0393685602 --json
+ow-cli track <TRACKING>
+ow-cli track <TRACKING> --json
 ```
 
 Muestra llegada a Miami y Venezuela, peso, dimensiones e historial de movimientos del tracking.
@@ -121,8 +121,8 @@ Muestra llegada a Miami y Venezuela, peso, dimensiones e historial de movimiento
 ### Alertas
 
 ```bash
-ow-cli alerts TRACKING
-ow-cli alerts TRACKING --json
+ow-cli alerts <TRACKING>
+ow-cli alerts <TRACKING> --json
 ```
 
 Lista las alertas existentes del tracking.
@@ -130,9 +130,9 @@ Lista las alertas existentes del tracking.
 ### Crear alerta
 
 ```bash
-ow-cli create-alert TRACKING --type aereo
-ow-cli create-alert TRACKING --type maritimo --yes
-ow-cli create-alert TRACKING --type aereo --type compactar
+ow-cli create-alert <TRACKING> --type aereo
+ow-cli create-alert <TRACKING> --type maritimo --yes
+ow-cli create-alert <TRACKING> --type aereo --type compactar
 ```
 
 Tipos disponibles:
@@ -153,8 +153,8 @@ El CLI consulta las alertas existentes antes de crear una y evita duplicados del
 ### Eliminar alerta
 
 ```bash
-ow-cli delete-alert TRACKING --type aereo
-ow-cli delete-alert TRACKING --type maritimo --yes
+ow-cli delete-alert <TRACKING> --type aereo
+ow-cli delete-alert <TRACKING> --type maritimo --yes
 ```
 
 El comando requiere el tracking y un solo `--type`, pide confirmación por defecto y confirma en el sitio que la alerta haya desaparecido. Solo se elimina una alerta editable; si hay varias del mismo tipo para el tracking, el CLI evita una eliminación ambigua.
