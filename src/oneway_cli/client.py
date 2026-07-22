@@ -334,7 +334,7 @@ def credentials(interactive: bool) -> tuple[str, str, bool]:
     if legacy_email and legacy_password:
         return legacy_email, legacy_password, True
     if not interactive or not sys.stdin.isatty():
-        raise OneWayError("Ejecuta `oneway-cli login` o define ONEWAY_EMAIL y ONEWAY_PASSWORD.")
+        raise OneWayError("Ejecuta `ow-cli login` o define ONEWAY_EMAIL y ONEWAY_PASSWORD.")
     email = input("Correo OneWayID: ").strip()
     password = getpass.getpass("CI / contraseña OneWayID: ")
     return email, password, True
@@ -735,7 +735,7 @@ def parse_tracking_payload(payload: Any, tracking: str) -> TrackingResult:
 
 def login_credentials(email: str | None = None) -> tuple[str, str]:
     if not sys.stdin.isatty():
-        raise OneWayError("`oneway-cli login` requiere una terminal interactiva.")
+        raise OneWayError("`ow-cli login` requiere una terminal interactiva.")
     email = email or input("Correo OneWayID: ").strip()
     password = getpass.getpass("CI / contraseña OneWayID: ")
     return email, password

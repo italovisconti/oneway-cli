@@ -20,19 +20,19 @@ CLI no oficial para consultar trackings, órdenes y alertas de cuentas One Way C
 
 ```bash
 # Iniciar sesión
-oneway-cli login
+ow-cli login
 
 # Listar órdenes pendientes
-oneway-cli orders
+ow-cli orders
 
 # Consultar un tracking
-oneway-cli track 1Z19X22R0393685602
+ow-cli track 1Z19X22R0393685602
 
 # Crear una alerta
-oneway-cli create-alert 1Z19X22R0393685602 --type aereo
+ow-cli create-alert 1Z19X22R0393685602 --type aereo
 
 # Eliminar una alerta
-oneway-cli delete-alert 1Z19X22R0393685602 --type aereo
+ow-cli delete-alert 1Z19X22R0393685602 --type aereo
 ```
 
 La primera vez que se ejecuta un comando protegido, el CLI solicita el correo y la contraseña de One Way Cargo. También se pueden definir las variables de entorno `ONEWAY_EMAIL` y `ONEWAY_PASSWORD` para ejecuciones no interactivas.
@@ -41,17 +41,25 @@ La primera vez que se ejecuta un comando protegido, el CLI solicita el correo y 
 
 ### Desde GitHub Releases
 
-Instalar la rueda de la versión v0.3.1 directamente con `pipx`:
+Instalar la rueda de la versión v0.4.0 directamente con `pipx`:
 
 ```bash
-pipx install https://github.com/italovisconti/oneway-cli/releases/download/v0.3.1/oneway_cli-0.3.1-py3-none-any.whl
+pipx install https://github.com/italovisconti/oneway-cli/releases/download/v0.4.0/oneway_cli-0.4.0-py3-none-any.whl
+```
+
+Alternativa con `uv`:
+
+```bash
+uv tool install https://github.com/italovisconti/oneway-cli/releases/download/v0.4.0/oneway_cli-0.4.0-py3-none-any.whl
 ```
 
 Alternativa con `pip`:
 
 ```bash
-python -m pip install --user https://github.com/italovisconti/oneway-cli/releases/download/v0.3.1/oneway_cli-0.3.1-py3-none-any.whl
+python -m pip install --user https://github.com/italovisconti/oneway-cli/releases/download/v0.4.0/oneway_cli-0.4.0-py3-none-any.whl
 ```
+
+Cada release usa una URL con su versión. Para instalar una versión posterior, ejecutar el mismo comando con la nueva URL y `--force`.
 
 ### Desde el código fuente
 
@@ -70,8 +78,8 @@ pipx install .
 Verificar la instalación:
 
 ```bash
-oneway-cli --version
-oneway-cli --help
+ow-cli --version
+ow-cli --help
 ```
 
 ### Autocompletado
@@ -79,7 +87,7 @@ oneway-cli --help
 Generar e instalar el script de autocompletado para el shell activo:
 
 ```bash
-oneway-cli --install-completion
+ow-cli --install-completion
 ```
 
 Reiniciar la terminal o recargar el shell para activarlo.
@@ -89,10 +97,10 @@ Reiniciar la terminal o recargar el shell para activarlo.
 ### Órdenes
 
 ```bash
-oneway-cli orders
-oneway-cli orders --all
-oneway-cli orders --status "Por Pagar"
-oneway-cli orders --json
+ow-cli orders
+ow-cli orders --all
+ow-cli orders --status "Por Pagar"
+ow-cli orders --json
 ```
 
 Muestra las órdenes principales del panel de cuentas. Cada fila representa una orden principal e incluye warehouse, tracking, estado, peso/volumen, llegadas a USA y Venezuela, cargos, reempaques y el total que devuelve la página.
@@ -104,8 +112,8 @@ Por defecto se ocultan las órdenes en estado `pagado`. Usar `--all` para inclui
 ### Tracking
 
 ```bash
-oneway-cli track 1Z19X22R0393685602
-oneway-cli track 1Z19X22R0393685602 --json
+ow-cli track 1Z19X22R0393685602
+ow-cli track 1Z19X22R0393685602 --json
 ```
 
 Muestra llegada a Miami y Venezuela, peso, dimensiones e historial de movimientos del tracking.
@@ -113,8 +121,8 @@ Muestra llegada a Miami y Venezuela, peso, dimensiones e historial de movimiento
 ### Alertas
 
 ```bash
-oneway-cli alerts TRACKING
-oneway-cli alerts TRACKING --json
+ow-cli alerts TRACKING
+ow-cli alerts TRACKING --json
 ```
 
 Lista las alertas existentes del tracking.
@@ -122,9 +130,9 @@ Lista las alertas existentes del tracking.
 ### Crear alerta
 
 ```bash
-oneway-cli create-alert TRACKING --type aereo
-oneway-cli create-alert TRACKING --type maritimo --yes
-oneway-cli create-alert TRACKING --type aereo --type compactar
+ow-cli create-alert TRACKING --type aereo
+ow-cli create-alert TRACKING --type maritimo --yes
+ow-cli create-alert TRACKING --type aereo --type compactar
 ```
 
 Tipos disponibles:
@@ -145,8 +153,8 @@ El CLI consulta las alertas existentes antes de crear una y evita duplicados del
 ### Eliminar alerta
 
 ```bash
-oneway-cli delete-alert TRACKING --type aereo
-oneway-cli delete-alert TRACKING --type maritimo --yes
+ow-cli delete-alert TRACKING --type aereo
+ow-cli delete-alert TRACKING --type maritimo --yes
 ```
 
 El comando requiere el tracking y un solo `--type`, pide confirmación por defecto y confirma en el sitio que la alerta haya desaparecido. Solo se elimina una alerta editable; si hay varias del mismo tipo para el tracking, el CLI evita una eliminación ambigua.
@@ -154,9 +162,9 @@ El comando requiere el tracking y un solo `--type`, pide confirmación por defec
 ### Sesión
 
 ```bash
-oneway-cli session-status
-oneway-cli logout
-oneway-cli logout --forget-credentials
+ow-cli session-status
+ow-cli logout
+ow-cli logout --forget-credentials
 ```
 
 `logout` elimina la sesión local, pero conserva el correo y la clave del llavero para poder iniciar sesión de nuevo. Con `--forget-credentials` también borra esas credenciales.
@@ -186,7 +194,7 @@ El repositorio es público y las releases están disponibles en GitHub. PyPI es 
 
 ```bash
 python -m pip install --user -e .
-oneway-cli --help
+ow-cli --help
 ```
 
 El paquete usa `src/oneway_cli/`, `Typer` para los comandos, `Rich` para la salida, `BeautifulSoup` para analizar listados HTML y `curl_cffi` para las solicitudes autenticadas.
