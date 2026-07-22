@@ -43,6 +43,14 @@ ALERT_TYPES = {
     "quotation": "Cotización",
     "hold": "Hold",
 }
+ALERT_TYPE_LABELS = {
+    "aereo": {"aerea", "aereo", "envio aereo"},
+    "maritimo": {"maritima", "maritimo", "envio maritimo"},
+    "compactar": {"compactar"},
+    "verification": {"verificacion", "verification"},
+    "quotation": {"cotizacion", "quotation"},
+    "hold": {"hold"},
+}
 UNSUPPORTED_ALERT_TYPES = {"repack"}
 FEE_CONSENT_TYPES = {"verification", "quotation", "hold"}
 
@@ -61,6 +69,12 @@ class Alert:
     type: str
     tracking: str
     status: str
+
+
+@dataclass(frozen=True)
+class AlertDetail:
+    alert: Alert
+    edit_url: str | None
 
 
 @dataclass(frozen=True)
@@ -552,31 +566,50 @@ def orders(session: requests.Session) -> OrdersResult:
     return result
 
 
-def parse_alerts_html(html: str, tracking: str) -> list[Alert]:
-    """Parse alerts table HTML into Alert objects, filtering by tracking number.
+def parse_alert_details_html(html: str, tracking: str) -> list[AlertDetail]:
+    """Parse alerts table HTML, including edit links when available.
 
     Pure function — no session, no network.
     """
     soup = BeautifulSoup(html, "html.parser")
-    alerts: list[Alert] = []
+    alerts: list[AlertDetail] = []
     for row in soup.select("table tbody tr"):
         cells = row.find_all("td")
         if len(cells) < 4 or text(cells[2]).upper() != tracking:
             continue
-        alerts.append(Alert(text(cells[0]), text(cells[1]), text(cells[2]).upper(), text(cells[3])))
+        edit_link = row.select_one('a[href*="/onewayidv2/alert/"][href$="/edit"]')
+        edit_url = str(edit_link["href"]) if edit_link else None
+        alerts.append(
+            AlertDetail(
+                Alert(text(cells[0]), text(cells[1]), text(cells[2]).upper(), text(cells[3])),
+                edit_url,
+            )
+        )
     return alerts
 
 
-def alerts_for_tracking(session: requests.Session, tracking: str) -> list[Alert]:
+def parse_alerts_html(html: str, tracking: str) -> list[Alert]:
+    """Parse alerts table HTML into Alert objects, filtering by tracking number."""
+    return [detail.alert for detail in parse_alert_details_html(html, tracking)]
+
+
+def alert_details_for_tracking(session: requests.Session, tracking: str) -> list[AlertDetail]:
     response = protected_get(session, ALERTS_URL, params={"tracking": tracking})
-    alerts = parse_alerts_html(response.text, tracking)
+    alerts = parse_alert_details_html(response.text, tracking)
     save_session(session)
     return alerts
 
 
+def alerts_for_tracking(session: requests.Session, tracking: str) -> list[Alert]:
+    return [detail.alert for detail in alert_details_for_tracking(session, tracking)]
+
+
 def alert_type_exists(alerts: list[Alert], alert_type: str) -> bool:
-    expected = unicodedata.normalize("NFKD", ALERT_TYPES[alert_type]).encode("ascii", "ignore").decode().lower()
-    return any(expected in unicodedata.normalize("NFKD", alert.type).encode("ascii", "ignore").decode().lower() for alert in alerts)
+    labels = ALERT_TYPE_LABELS[alert_type]
+    return any(
+        any(label in unicodedata.normalize("NFKD", alert.type).encode("ascii", "ignore").decode().lower() for label in labels)
+        for alert in alerts
+    )
 
 
 def create_alert(
@@ -602,6 +635,54 @@ def create_alert(
     location = urljoin(ALERT_URL, response.headers.get("location", ""))
     if location.rstrip("/") == LOGIN_URL.rstrip("/"):
         raise AuthenticationExpired("La sesión expiró durante la creación de la alerta.")
+
+
+def delete_alert(session: requests.Session, tracking: str, alert_type: str) -> None:
+    if alert_type in UNSUPPORTED_ALERT_TYPES or alert_type not in ALERT_TYPES:
+        raise OneWayError(f"Tipo de alerta no soportado: {alert_type}.")
+    matching = [
+        detail
+        for detail in alert_details_for_tracking(session, tracking)
+        if alert_type_exists([detail.alert], alert_type)
+    ]
+    if not matching:
+        raise OneWayError(f"No existe una alerta {ALERT_TYPES[alert_type].lower()} para {tracking}.")
+    if len(matching) > 1:
+        raise OneWayError(
+            f"Hay varias alertas {ALERT_TYPES[alert_type].lower()} para {tracking}; elimínalas desde el sitio."
+        )
+    edit_url = matching[0].edit_url
+    if not edit_url:
+        raise OneWayError("Esta alerta no se puede eliminar desde el sitio.")
+
+    response = protected_get(session, urljoin(ALERTS_URL, edit_url))
+    soup = BeautifulSoup(response.text, "html.parser")
+    delete_form = next(
+        (
+            form
+            for form in soup.select("form")
+            if (method := form.select_one('input[name="_method"]'))
+            and str(method.get("value", "")).upper() == "DELETE"
+        ),
+        None,
+    )
+    if delete_form is None:
+        raise OneWayError("El sitio no ofrece un formulario para eliminar esta alerta.")
+    fields = form_fields(str(delete_form))
+    if "_token" not in fields:
+        raise OneWayError("El formulario para eliminar la alerta no contiene un token CSRF.")
+    delete_url = urljoin(response.url, str(delete_form.get("action", "")))
+    response = session.post(delete_url, data=fields, timeout=30, allow_redirects=False)
+    if response.status_code not in {301, 302, 303}:
+        raise OneWayError(f"El servidor rechazó la eliminación de la alerta ({response.status_code}).")
+    location = urljoin(delete_url, response.headers.get("location", ""))
+    if location.rstrip("/") == LOGIN_URL.rstrip("/"):
+        raise AuthenticationExpired("La sesión expiró durante la eliminación de la alerta.")
+    if any(
+        alert_type_exists([detail.alert], alert_type)
+        for detail in alert_details_for_tracking(session, tracking)
+    ):
+        raise OneWayError("El sitio no confirmó la eliminación de la alerta.")
 
 
 def lookup_tracking(session: requests.Session, tracking: str) -> TrackingResult:

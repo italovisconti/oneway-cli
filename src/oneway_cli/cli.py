@@ -223,6 +223,41 @@ def create_alert(
         fail(str(error))
 
 
+@app.command("delete-alert", cls=SpanishTyperCommand)
+def delete_alert(
+    tracking: Annotated[str, typer.Argument(help="Número de tracking de la alerta")],
+    alert_type: Annotated[
+        str,
+        typer.Option(
+            "--type",
+            help="Tipo de alerta: aereo, maritimo, compactar, verification, quotation o hold",
+        ),
+    ],
+    yes: Annotated[bool, typer.Option("--yes", help="No pedir confirmación")] = False,
+) -> None:
+    """Eliminar una alerta existente de un tracking."""
+    label = ""
+    try:
+        tracking = client.validate_tracking(tracking)
+        alert_type = alert_type.lower()
+        if alert_type in client.UNSUPPORTED_ALERT_TYPES:
+            raise client.OneWayError(f"Tipo inválido: {alert_type}.")
+        if alert_type not in client.ALERT_TYPES:
+            raise client.OneWayError(f"Tipo inválido: {alert_type}.")
+        label = client.ALERT_TYPES[alert_type]
+        if not yes and not typer.confirm(f"Eliminar la alerta {label} para {tracking}"):
+            console.print("Cancelado.")
+            return
+        session, _ = session_or_fail()
+        try:
+            client.delete_alert(session, tracking, alert_type)
+        finally:
+            session.close()
+    except (client.OneWayError, RequestsError) as error:
+        fail(str(error))
+    console.print(f"[green]Alerta {label.lower()} eliminada:[/] {tracking}")
+
+
 @app.command(cls=SpanishTyperCommand)
 def alerts(
     tracking: Annotated[str, typer.Argument(help="Número de tracking a consultar")],

@@ -30,6 +30,9 @@ oneway-cli track 1Z19X22R0393685602
 
 # Crear una alerta
 oneway-cli create-alert 1Z19X22R0393685602 --type aereo
+
+# Eliminar una alerta
+oneway-cli delete-alert 1Z19X22R0393685602 --type aereo
 ```
 
 La primera vez que se ejecuta un comando protegido, el CLI solicita el correo y la contraseña de One Way Cargo. También se pueden definir las variables de entorno `ONEWAY_EMAIL` y `ONEWAY_PASSWORD` para ejecuciones no interactivas.
@@ -38,16 +41,16 @@ La primera vez que se ejecuta un comando protegido, el CLI solicita el correo y 
 
 ### Desde GitHub Releases
 
-Instalar la rueda de la versión v0.3.0 directamente con `pipx`:
+Instalar la rueda de la versión v0.3.1 directamente con `pipx`:
 
 ```bash
-pipx install https://github.com/italovisconti/oneway-cli/releases/download/v0.3.0/oneway_cli-0.3.0-py3-none-any.whl
+pipx install https://github.com/italovisconti/oneway-cli/releases/download/v0.3.1/oneway_cli-0.3.1-py3-none-any.whl
 ```
 
 Alternativa con `pip`:
 
 ```bash
-python -m pip install --user https://github.com/italovisconti/oneway-cli/releases/download/v0.3.0/oneway_cli-0.3.0-py3-none-any.whl
+python -m pip install --user https://github.com/italovisconti/oneway-cli/releases/download/v0.3.1/oneway_cli-0.3.1-py3-none-any.whl
 ```
 
 ### Desde el código fuente
@@ -138,6 +141,15 @@ Tipos disponibles:
 `verification`, `quotation` y `hold` requieren `--accept-storage-fee` cuando aplique un cargo de almacenamiento.
 
 El CLI consulta las alertas existentes antes de crear una y evita duplicados del mismo tipo. Después del envío vuelve a consultarlas para confirmar la creación. El tipo `repack` aún no está disponible porque requiere enviar varios trackings y sus consentimientos en una sola operación.
+
+### Eliminar alerta
+
+```bash
+oneway-cli delete-alert TRACKING --type aereo
+oneway-cli delete-alert TRACKING --type maritimo --yes
+```
+
+El comando requiere el tracking y un solo `--type`, pide confirmación por defecto y confirma en el sitio que la alerta haya desaparecido. Solo se elimina una alerta editable; si hay varias del mismo tipo para el tracking, el CLI evita una eliminación ambigua.
 
 ### Sesión
 

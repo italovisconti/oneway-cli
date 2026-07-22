@@ -60,7 +60,7 @@ class TestParseAlertsHtml(unittest.TestCase):
 class TestAlertTypeExists(unittest.TestCase):
 
     def test_matches_exact_and_accent_insensitive(self) -> None:
-        alerts = [Alert("d", "Aérea", "TRK", "s"), Alert("d", "Marítima", "TRK", "s")]
+        alerts = [Alert("d", "Envio Aereo", "TRK", "s"), Alert("d", "Envio Maritimo", "TRK", "s")]
         self.assertTrue(alert_type_exists(alerts, "aereo"))
         self.assertTrue(alert_type_exists(alerts, "maritimo"))
         self.assertFalse(alert_type_exists(alerts, "compactar"))
