@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="static/oneway-cli-logo.png" alt="oneway-cli logo" width="220"/>
+  <img src="https://raw.githubusercontent.com/italovisconti/oneway-cli/main/static/oneway-cli-logo.png" alt="oneway-cli logo" width="220"/>
 </p>
 
 <p align="center">
@@ -41,22 +41,22 @@ La primera vez que se ejecuta un comando protegido, el CLI solicita el correo y 
 
 ### Desde GitHub Releases
 
-Instalar la rueda de la versión v0.4.1 directamente con `pipx`:
+Instalar la rueda de la versión v0.4.2 directamente con `pipx`:
 
 ```bash
-pipx install https://github.com/italovisconti/oneway-cli/releases/download/v0.4.1/oneway_cli-0.4.1-py3-none-any.whl
+pipx install https://github.com/italovisconti/oneway-cli/releases/download/v0.4.2/oneway_cli-0.4.2-py3-none-any.whl
 ```
 
 Alternativa con `uv`:
 
 ```bash
-uv tool install https://github.com/italovisconti/oneway-cli/releases/download/v0.4.1/oneway_cli-0.4.1-py3-none-any.whl
+uv tool install https://github.com/italovisconti/oneway-cli/releases/download/v0.4.2/oneway_cli-0.4.2-py3-none-any.whl
 ```
 
 Alternativa con `pip`:
 
 ```bash
-python -m pip install --user https://github.com/italovisconti/oneway-cli/releases/download/v0.4.1/oneway_cli-0.4.1-py3-none-any.whl
+python -m pip install --user https://github.com/italovisconti/oneway-cli/releases/download/v0.4.2/oneway_cli-0.4.2-py3-none-any.whl
 ```
 
 Cada release usa una URL con su versión. Para instalar una versión posterior, ejecutar el mismo comando con la nueva URL y `--force`.
